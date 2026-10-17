@@ -45,7 +45,7 @@ in {
 
   services.displayManager.sddm = {
     enable = true;
-    wayland.enable = true;
+    # wayland.enable = false; - broke AMD GPU
 
     theme = "pixel-munchlax";
     
