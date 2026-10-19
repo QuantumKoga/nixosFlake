@@ -4,134 +4,109 @@
 }:
 
 pkgs.mkShell {
+  name = "air-umu";
 
-  name = "air-wine32";
-
-  buildInputs = with pkgs; [
-
-    wineWowPackages.stable
+  packages = with pkgs; [
+    umu-launcher
     winetricks
-
     curl
     cabextract
-
-    # 32-bit multimedia support
-    pkgsi686Linux.gst_all_1.gstreamer
-    pkgsi686Linux.gst_all_1.gst-plugins-base
-    pkgsi686Linux.gst_all_1.gst-plugins-good
-    pkgsi686Linux.gst_all_1.gst-plugins-bad
-
   ];
 
-
   shellHook = ''
+    export WINEPREFIX="$HOME/Games/adobeAir"
 
-    echo ">>> Konfiguracja AIR pod Wine environment"
-
-
-    # =====================================
-    # WINE
-    # =====================================
-
-    export WINEARCH=win32
-    export WINEPREFIX="$HOME/.wine-air"
+    export TMPDIR="/tmp"
+    export TMP="$TMPDIR"
+    export TEMP="$TMPDIR"
 
     export WINEESYNC=0
     export WINEFSYNC=0
 
-
-    # Nie włączamy:
-    # WINEDEBUG
-    # LARGE_ADDRESS_AWARE
-    # DLL overrides
-
-
-    # =====================================
-    # CREATE PREFIX
-    # =====================================
-
-    if [ ! -f "$WINEPREFIX/system.reg" ]; then
-
-      echo ">>> Tworzenie 32-bitowego prefixu..."
-
-      WINEARCH=win32 \
-      WINEPREFIX="$WINEPREFIX" \
-      wineboot
-
-      echo ">>> Prefix gotowy."
-      echo ">>> Restart nix-shell."
-
-      return 0
-
-    fi
-
-
-
-    # =====================================
-    # WINETRICKS
-    # =====================================
-
-    echo ">>> Instalacja runtime..."
-
-    winetricks -q settings win7
-
-    winetricks -q \
-      vcrun2010 \
-      gdiplus \
-      corefonts
-
-
-
-    # =====================================
-    # ADOBE AIR
-    # =====================================
-
     AIR="$HOME/.cache/air/AdobeAIRInstaller.exe"
+    AIR_URL="https://archive.org/download/adobe-airinstaller/AdobeAIRInstaller.exe"
 
-    mkdir -p "$(dirname "$AIR")"
+    mkdir -p "$HOME/Games" "$(dirname "$AIR")"
 
+    # Sprawdzenie obecności bibliotek runtime Adobe AIR
+    air_installed() {
+      [ -f "$WINEPREFIX/drive_c/Program Files/Common Files/Adobe AIR/Versions/1.0/Adobe AIR.dll" ] ||
+      [ -f "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Adobe AIR/Versions/1.0/Adobe AIR.dll" ]
+    }
 
+    echo "======================================"
+    echo " Adobe AIR + UMU"
+    echo " Prefix: $WINEPREFIX"
+    echo "======================================"
+
+    # Przygotowanie zależności gry tylko raz
+    if [ ! -f "$WINEPREFIX/.air-runtime-ready" ]; then
+      echo ">>> Instalowanie zależności Windows przez UMU..."
+
+      if ! umu-run winetricks -q settings win7; then
+        echo "Błąd konfiguracji prefixu."
+        return 1
+      fi
+
+      if ! umu-run winetricks -q vcrun2010 gdiplus corefonts; then
+        echo "Błąd instalacji zależności."
+        return 1
+      fi
+
+      touch "$WINEPREFIX/.air-runtime-ready"
+    fi
+
+    # Pobranie instalatora Adobe AIR
     if [ ! -f "$AIR" ]; then
+      echo ">>> Pobieranie instalatora Adobe AIR..."
 
-      echo ">>> Pobieranie Adobe AIR..."
-
-      curl -L \
-      -o "$AIR" \
-      https://archive.org/download/adobe-airinstaller/AdobeAIRInstaller.exe
-
+      if ! curl -fL "$AIR_URL" -o "$AIR"; then
+        echo "Nie udało się pobrać Adobe AIR."
+        return 1
+      fi
     fi
 
+    # Instalacja AIR tylko wtedy, gdy brakuje runtime
+    if ! air_installed; then
+      echo ">>> Adobe AIR nie został wykryty."
+      echo ">>> Uruchamiam instalator przez umu-run..."
 
+      umu-run "$AIR"
 
-    if ! WINEPREFIX="$WINEPREFIX" wine reg query \
-      "HKLM\\Software\\Adobe\\AIR" \
-      >/dev/null 2>&1
-    then
-
-      echo ">>> Instalacja Adobe AIR..."
-
-      WINEPREFIX="$WINEPREFIX" \
-      wine "$AIR"
-
-      echo ">>> AIR zainstalowany."
-
+      if ! air_installed; then
+        echo ""
+        echo "Nie potwierdzono instalacji Adobe AIR."
+        echo "Sprawdź, czy instalator zakończył się poprawnie."
+        return 1
+      fi
     else
-
-      echo ">>> AIR już istnieje."
-
+      echo ">>> Adobe AIR jest już zainstalowany."
     fi
 
+    # Funkcja uruchamiająca grę
+    run-game() {
+      if ! air_installed; then
+        echo "Brak Adobe AIR. Nie uruchamiam gry."
+        return 1
+      fi
 
+      if [ "$#" -ne 1 ]; then
+        echo 'Użycie: run-game "/ścieżka/do/Game.exe"'
+        return 2
+      fi
+
+      if [ ! -f "$1" ]; then
+        echo "Nie znaleziono pliku: $1"
+        return 1
+      fi
+
+      echo ">>> Uruchamiam grę przez UMU..."
+      umu-run "$1"
+    }
 
     echo ""
-    echo "================================="
-    echo " GOTOWE"
-    echo ""
-    echo "Uruchom:"
-    echo "wine game.exe"
-    echo "================================="
-
-
+    echo "Środowisko gotowe."
+    echo 'Uruchom grę: run-game "/ścieżka/do/Game.exe"'
+    echo "======================================"
   '';
-
 }
