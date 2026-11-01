@@ -127,6 +127,7 @@ in {
     grim
     slurp
     gpu-screen-recorder
+    gpu-screen-recorder-gtk
 
     # Tools
     pandoc
@@ -191,6 +192,9 @@ in {
     style = "kvantum";
   };
   
+  programs.gpu-screen-recorder = {
+    enable = true;
+  };
   
   programs.dconf.profiles.user.databases = [
     {

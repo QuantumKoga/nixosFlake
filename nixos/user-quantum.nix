@@ -144,7 +144,7 @@ in
         };
 
         ai = {
-          hostname = "192.168.8.173";
+          hostname = "192.168.50.10";
           user = "quantum";
         };
       };

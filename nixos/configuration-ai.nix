@@ -26,6 +26,28 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  networking.interfaces.eno1.ipv4.addresses = [
+    {
+      address = "192.168.50.11";
+      prefixLength = 24;
+    }
+  ];
+
+  networking.defaultGateway = "192.168.50.1";
+  networking.nameservers = [ "192.168.50.1" ];
+
+  systemd.services.disable-wifi = {
+    description = "Disable Wi-Fi radio";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "NetworkManager.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.networkmanager}/bin/nmcli radio wifi off";
+    };
+  };
+
+
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;

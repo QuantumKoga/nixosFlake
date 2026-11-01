@@ -43,6 +43,6 @@
   };
 
   # host name in network
-  networking.hostName = "NixAI"; # Define your hostname.
+  networking.hostName = "minos"; # Define your hostname.
 
 }
