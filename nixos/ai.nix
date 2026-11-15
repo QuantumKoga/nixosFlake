@@ -117,27 +117,27 @@
   # OPEN WEB UI (chat interface)
   # ------------------------------------------------------------
 
-services.open-webui = {
-  enable = true;
+  services.open-webui = {
+    enable = true;
 
-  host = "0.0.0.0";
-  port = 8080;
+    host = "0.0.0.0";
+    port = 8080;
 
-  #package = pkgs.open-webui.override { python3Packages = pkgs.python312Packages; };
+    #package = pkgs.open-webui.override { python3Packages = pkgs.python312Packages; };
 
-  environment = {
-    OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+    environment = {
+      OLLAMA_BASE_URL = "http://127.0.0.1:11434";
 
-    ENABLE_WEB_SEARCH = "true";
-    WEB_SEARCH_ENGINE = "searxng";
-    SEARXNG_QUERY_URL = "http://127.0.0.1:8081/search?q=<query>";
+      ENABLE_WEB_SEARCH = "true";
+      WEB_SEARCH_ENGINE = "searxng";
+      SEARXNG_QUERY_URL = "http://127.0.0.1:8081/search?q=<query>";
 
-    WEB_SEARCH_RESULT_COUNT = "10";
+      WEB_SEARCH_RESULT_COUNT = "10";
 
 
-    DEFAULT_MODEL_PARAMS = ''{"function_calling":"native"}'';
+      DEFAULT_MODEL_PARAMS = ''{"function_calling":"native"}'';
+    };
   };
-};
 
   # ------------------------------------------------------------
   # SEARXNG (tool for LLM internet access)

@@ -150,24 +150,24 @@ in
       };
     };
 
-    programs.vscode = {
-      enable = true;
+    #programs.vscode = {
+    #  enable = true;
 
-      package = pkgs.vscode.override {
-        commandLineArgs = [
-          "--ozone-platform=wayland"
-          "--enable-features=UseOzonePlatform"
-        ];
-      };
+    #  package = pkgs.vscode.override {
+    #    commandLineArgs = [
+    #      "--ozone-platform=wayland"
+    #      "--enable-features=UseOzonePlatform"
+    #    ];
+    #  };
 
-      #package = pkgs.vscode; # albo pkgs.vscodium
+    #  #package = pkgs.vscode; # albo pkgs.vscodium
 
-      profiles.default.extensions = with pkgs.vscode-extensions; [
-        ms-vscode.live-server
-        esbenp.prettier-vscode
-        dbaeumer.vscode-eslint
-      ];
-    };
+    #  profiles.default.extensions = with pkgs.vscode-extensions; [
+    #    ms-vscode.live-server
+    #    esbenp.prettier-vscode
+    #    dbaeumer.vscode-eslint
+    #  ];
+    #};
 
     programs.fzf = {
       enable = true;
