@@ -11,6 +11,21 @@
     htop
     vim
     jq
+    # Python environment for Pokémon AI API and scrapers
+    (python3.withPackages (ps: with ps; [
+      # Existing scraper dependencies
+      requests
+      beautifulsoup4
+      lxml
+      tqdm
+
+      # Pokémon AI API
+      fastapi
+      uvicorn
+      pydantic
+      httpx
+      orjson
+    ]))
 
     # LLM tooling
     llama-cpp
