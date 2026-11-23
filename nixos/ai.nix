@@ -1,9 +1,27 @@
+
 { config, pkgs, pkgs-unstable, ... }:
 
+let
+  pokemonAiPython = pkgs.python3.withPackages (ps: with ps; [
+    # Scraper dependencies
+    requests
+    beautifulsoup4
+    lxml
+    tqdm
+
+    # Pokémon AI API
+    fastapi
+    uvicorn
+    pydantic
+    httpx
+    orjson
+  ]);
+in
 {
   # ------------------------------------------------------------
   # SYSTEM BASE PACKAGES
   # ------------------------------------------------------------
+
   environment.systemPackages = with pkgs; [
     git
     curl
@@ -11,30 +29,18 @@
     htop
     vim
     jq
-    # Python environment for Pokémon AI API and scrapers
-    (python3.withPackages (ps: with ps; [
-      # Existing scraper dependencies
-      requests
-      beautifulsoup4
-      lxml
-      tqdm
 
-      # Pokémon AI API
-      fastapi
-      uvicorn
-      pydantic
-      httpx
-      orjson
-    ]))
+    # Python environment for Pokémon AI API and scrapers
+    pokemonAiPython
 
     # LLM tooling
     llama-cpp
 
-    # debugging GPU / system
+    # Debugging GPU / system
     pciutils
     usbutils
 
-    # network debug
+    # Network debug
     iperf3
     openssl
 
@@ -50,6 +56,7 @@
   # ------------------------------------------------------------
   # NETWORK / LAN ACCESS
   # ------------------------------------------------------------
+
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [
@@ -63,6 +70,7 @@
   networking.enableIPv6 = false;
   networking.nameservers = [ "192.168.50.1" ];
   services.resolved.enable = false;
+
 
   # ------------------------------------------------------------
   # MODELS PARTITION ACCESS
@@ -87,14 +95,16 @@
     '';
   };
 
+
   # ------------------------------------------------------------
   # SSH SERVER (remote maintenance over LAN)
   # ------------------------------------------------------------
+
   services.openssh = {
     enable = true;
 
     settings = {
-      PasswordAuthentication = true;   # możesz zmienić na false później
+      PasswordAuthentication = true;   # You can disable this later
       PermitRootLogin = "no";
       KbdInteractiveAuthentication = false;
     };
@@ -110,9 +120,11 @@
     enable32Bit = true;
   };
 
+
   # ------------------------------------------------------------
   # OLLAMA (core LLM runtime)
   # ------------------------------------------------------------
+
   services.ollama = {
     enable = true;
 
@@ -120,13 +132,66 @@
 
     home = "/data/ollama";
 
-    # ważne: LAN access
+    # LAN access
     host = "0.0.0.0";
     port = 11434;
 
-    # backend acceleration (zmień jeśli trzeba)
-    # acceleration = "rocm";  # "cuda" / null / rocm
+    # acceleration = "rocm";
   };
+
+
+  # ------------------------------------------------------------
+  # POKEMON AI API
+  # ------------------------------------------------------------
+
+  systemd.services.pokemon-ai-api = {
+    description = "Pokemon Champions API";
+
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+
+      # Dedicated dynamic service user
+      DynamicUser = true;
+
+      # Project directory
+      WorkingDirectory = "/data/pokemon_ai";
+
+      # Start FastAPI through Uvicorn
+      ExecStart = ''
+        ${pokemonAiPython}/bin/uvicorn api.main:app \
+          --host 127.0.0.1 \
+          --port 8000
+      '';
+
+      Restart = "on-failure";
+      RestartSec = 5;
+
+      # Security hardening
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+
+      ProtectSystem = "strict";
+      ProtectHome = true;
+
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
+
+      RestrictSUIDSGID = true;
+      LockPersonality = true;
+
+      RestrictAddressFamilies = [
+        "AF_UNIX"
+        "AF_INET"
+        "AF_INET6"
+      ];
+    };
+  };
+
 
   # ------------------------------------------------------------
   # OPEN WEB UI (chat interface)
@@ -138,7 +203,9 @@
     host = "0.0.0.0";
     port = 8080;
 
-    #package = pkgs.open-webui.override { python3Packages = pkgs.python312Packages; };
+    # package = pkgs.open-webui.override {
+    #   python3Packages = pkgs.python312Packages;
+    # };
 
     environment = {
       OLLAMA_BASE_URL = "http://127.0.0.1:11434";
@@ -149,14 +216,15 @@
 
       WEB_SEARCH_RESULT_COUNT = "10";
 
-
       DEFAULT_MODEL_PARAMS = ''{"function_calling":"native"}'';
     };
   };
 
+
   # ------------------------------------------------------------
   # SEARXNG (tool for LLM internet access)
   # ------------------------------------------------------------
+
   services.searx = {
     enable = true;
 
@@ -178,21 +246,27 @@
     };
   };
 
+
   # ------------------------------------------------------------
-  # OPTIONAL: performance tuning for LLM workloads
+  # OPTIONAL: PERFORMANCE TUNING FOR LLM WORKLOADS
   # ------------------------------------------------------------
+
   boot.kernel.sysctl = {
     "vm.swappiness" = 10;
   };
 
+
   # ------------------------------------------------------------
-  # USER EXPERIENCE (opcjonalne, ale praktyczne)
+  # USER EXPERIENCE
   # ------------------------------------------------------------
-  services.tailscale.enable = false; # możesz włączyć później
+
+  services.tailscale.enable = false;
+
 
   # ------------------------------------------------------------
   # LAN VISIBILITY CONFIGURATION
   # ------------------------------------------------------------
+
   services.nginx = {
     enable = true;
 
@@ -211,6 +285,10 @@
     };
   };
 
-  # host name in network
-  networking.hostName = "minos"; # Define your hostname.
+
+  # ------------------------------------------------------------
+  # HOST NAME
+  # ------------------------------------------------------------
+
+  networking.hostName = "minos";
 }
