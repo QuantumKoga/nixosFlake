@@ -6,6 +6,37 @@ let
 in
 {
   users.mutableUsers = false;
+
+  # YubiKey authentication
+  security.pam.u2f = {
+    enable = true;
+    control = "sufficient";
+
+    settings = {
+      cue = true;
+      authfile = "/home/quantum/.config/Yubico/u2f_keys";
+      #debug = true;
+      #interactive = true;
+    };
+  };
+
+  security.pam.services = {
+    sddm = {
+      u2f.enable = true;
+      unixAuth = false;
+    };
+
+    login = {
+      u2f.enable = true;
+      unixAuth = false;
+    };
+
+    sudo = {
+      u2f.enable = true;
+      unixAuth = false;
+    };
+  };
+
   users.users.quantum = {
     isNormalUser = true;
     description = "quantum";
@@ -21,7 +52,7 @@ in
     ];
 
     # security
-    hashedPassword = "$6$sUTjGhSgqFFVB0ng$xs9ez/gF/BpcyFNlH4dkqfhbl9Zle/76Hjd9beuqRaeqlinaxfoNJmHSBZOkctr4W9QDmUSH/U5X2S5GbJwuE.";
+    hashedPassword = "!";
 
     openssh.authorizedKeys.keys = [
       (builtins.readFile ../keys/ssh.pub)
@@ -42,6 +73,8 @@ in
       zsh-autosuggestions
       zsh-syntax-highlighting
       unzip
+      # coding
+      vscode
       # browsers
       brave
       firefox-unwrapped
