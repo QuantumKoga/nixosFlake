@@ -7,47 +7,6 @@ in
 {
   users.mutableUsers = false;
 
-  # YubiKey authentication
-  security.pam.u2f = {
-    enable = true;
-    control = "sufficient";
-
-    settings = {
-      cue = true;
-      authfile = "/home/quantum/.config/Yubico/u2f_keys";
-      #debug = true;
-      #interactive = true;
-    };
-  };
-
-  # SSH agent authentication
-  security.pam.sshAgentAuth = {
-    enable = true;
-
-    # Root-controlled authorized keys file
-    authorizedKeysFiles = [
-      "/etc/ssh/authorized_keys.d/%u"
-    ];
-  };
-
-  security.pam.services = {
-    sddm = {
-      u2f.enable = true;
-      unixAuth = false;
-    };
-
-    login = {
-      u2f.enable = true;
-      unixAuth = false;
-    };
-
-    sudo = {
-      u2f.enable = true;
-      sshAgentAuth = true;
-      unixAuth = false;
-    };
-  };
-
   users.users.quantum = {
     isNormalUser = true;
     description = "quantum";
@@ -162,8 +121,6 @@ in
       DAB2EB329C21DF827535E63F2B54798C1B2947BE:6:
       EOF
     '';
-    
-    home.file.".config/Yubico/u2f_keys".source = yubikeyU2fKey;
 
     ###############   PROGRAMS   ######################
 
@@ -171,27 +128,23 @@ in
       enable = true;
       enableDefaultConfig = false;
 
-      matchBlocks = {
+      settings = {
         charon = {
-          hostname = "192.168.60.2";
-          user = "root";
+          HostName = "192.168.60.2";
+          User = "root";
         };
 
         minos = {
-          hostname = "192.168.50.11";
-          user = "quantum";
-          forwardAgent = true;
+          HostName = "192.168.50.11";
+          User = "quantum";
 
-          remoteForwards = [
-            {
-              bind.address = "/run/user/1000/gnupg/S.gpg-agent";
-              host.address = "/run/user/1000/gnupg/S.gpg-agent.extra";
-            }
+          ForwardAgent = "yes";
+
+          RemoteForward = [
+            "/run/user/1000/gnupg/S.gpg-agent /run/user/1000/gnupg/S.gpg-agent.extra"
           ];
 
-          extraOptions = {
-            StreamLocalBindUnlink = "yes";
-          };
+          StreamLocalBindUnlink = "yes";
         };
       };
     };
