@@ -20,6 +20,16 @@ in
     };
   };
 
+  # SSH agent authentication
+  security.pam.sshAgentAuth = {
+    enable = true;
+
+    # Root-controlled authorized keys file
+    authorizedKeysFiles = [
+      "/etc/ssh/authorized_keys.d/%u"
+    ];
+  };
+
   security.pam.services = {
     sddm = {
       u2f.enable = true;
@@ -33,6 +43,7 @@ in
 
     sudo = {
       u2f.enable = true;
+      sshAgentAuth = true;
       unixAuth = false;
     };
   };
@@ -160,47 +171,30 @@ in
       enable = true;
       enableDefaultConfig = false;
 
-      settings = {
-        router = {
-          hostname = "192.168.8.1";
+      matchBlocks = {
+        charon = {
+          hostname = "192.168.60.2";
           user = "root";
         };
 
-        proxmox = {
-          hostname = "192.168.8.50";
-          user = "root";
-        };
-
-        wedding = {
-          hostname = "192.168.8.51";
-          user = "root";
-        };
-
-        ai = {
-          hostname = "192.168.50.10";
+        minos = {
+          hostname = "192.168.50.11";
           user = "quantum";
+          forwardAgent = true;
+
+          remoteForwards = [
+            {
+              bind.address = "/run/user/1000/gnupg/S.gpg-agent";
+              host.address = "/run/user/1000/gnupg/S.gpg-agent.extra";
+            }
+          ];
+
+          extraOptions = {
+            StreamLocalBindUnlink = "yes";
+          };
         };
       };
     };
-
-    #programs.vscode = {
-    #  enable = true;
-
-    #  package = pkgs.vscode.override {
-    #    commandLineArgs = [
-    #      "--ozone-platform=wayland"
-    #      "--enable-features=UseOzonePlatform"
-    #    ];
-    #  };
-
-    #  #package = pkgs.vscode; # albo pkgs.vscodium
-
-    #  profiles.default.extensions = with pkgs.vscode-extensions; [
-    #    ms-vscode.live-server
-    #    esbenp.prettier-vscode
-    #    dbaeumer.vscode-eslint
-    #  ];
-    #};
 
     programs.fzf = {
       enable = true;

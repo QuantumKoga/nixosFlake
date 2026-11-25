@@ -104,9 +104,10 @@ in
     enable = true;
 
     settings = {
-      PasswordAuthentication = true;   # You can disable this later
+      PasswordAuthentication = false;   # You can disable this later
       PermitRootLogin = "no";
       KbdInteractiveAuthentication = false;
+      StreamLocalBindUnlink = true;
     };
   };
 
