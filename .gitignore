@@ -1,2 +1,2 @@
 # all .lock files
-*.lock
+#*.lock
