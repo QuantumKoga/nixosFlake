@@ -21,6 +21,7 @@ All profiles target `x86_64-linux`.
 ## Configuration Structure
 
 The configuration is split into independent modules to make it easier to maintain, extend and reuse across machines.
+![Scheme of the architecture](images/nixos-architecture.png)
 
 ### System Modules
 
