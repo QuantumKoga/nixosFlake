@@ -2,17 +2,17 @@
 { pkgs ? import <nixpkgs> {} }:
 
 let
-  #flake = builtins.getFlake (toString ../.);
+  # flake = builtins.getFlake (toString ../.);
 
-  #pkgs-unstable = import flake.inputs.nixpkgs-unstable {
-  #  system = "x86_64-linux";
-  #  config.allowUnfree = true;
-  #};
+  # pkgs-unstable = import flake.inputs.nixpkgs-unstable {
+  #   system = "x86_64-linux";
+  #   config.allowUnfree = true;
+  # };
 
-  #wine = pkgs-unstable.wineWow64Packages.unstable.override {
-  #  x11Support = false;
-  #  waylandSupport = true;
-  #};
+  # wine = pkgs-unstable.wineWow64Packages.unstable.override {
+  #   x11Support = false;
+  #   waylandSupport = true;
+  # };
 
   wine = pkgs.wineWow64Packages.stable;
 
@@ -29,26 +29,26 @@ let
 
     DOTNET_DIR="$WINEPREFIX/drive_c/Program Files/dotnet/shared/Microsoft.WindowsDesktop.App"
 
-    # Sprawdź, czy jest już zainstalowany .NET Desktop Runtime 10.x.
+    # Check whether .NET Desktop Runtime 10.x is already installed.
     if [ -d "$DOTNET_DIR/10.0.15" ]; then
-      echo ".NET Desktop Runtime 10.x jest już zainstalowany."
+      echo ".NET Desktop Runtime 10.x is already installed."
       exit 0
     fi
 
-    echo "Nie znaleziono .NET Desktop Runtime 10.x."
-    echo "Przygotowuję prefix Wine..."
+    echo ".NET Desktop Runtime 10.x was not found."
+    echo "Preparing the Wine prefix..."
 
     mkdir -p "$WINEPREFIX"
     ${wine}/bin/wineboot -u
 
-    # Katalog cache poza środowiskiem Nix.
+    # Cache directory outside the Nix environment.
     CACHE="''${XDG_CACHE_HOME:-$HOME/.cache}/pkhex"
     INSTALLER="$CACHE/windowsdesktop-runtime-${dotnetVersion}-win-x64.exe"
 
     mkdir -p "$CACHE"
 
     if [ ! -f "$INSTALLER" ]; then
-      echo "Pobieranie .NET Desktop Runtime ${dotnetVersion}..."
+      echo "Downloading .NET Desktop Runtime ${dotnetVersion}..."
 
       ${pkgs.curl}/bin/curl \
         --fail \
@@ -59,21 +59,21 @@ let
 
       mv "$INSTALLER.tmp" "$INSTALLER"
     else
-      echo "Znaleziono instalator w cache."
+      echo "Installer found in cache."
     fi
 
-    echo "Instalowanie .NET Desktop Runtime..."
+    echo "Installing .NET Desktop Runtime..."
 
     ls "$HOME/.local/share/wineprefixes/pkhex/drive_c/Program Files/dotnet/shared/Microsoft.WindowsDesktop.App/"
 
-    # Sprawdź faktyczny rezultat instalacji.
+    # Verify the actual installation result.
     if [ ! -d "$DOTNET_DIR/10.0.15" ]; then
-      echo "BŁĄD: nie znaleziono .NET Desktop Runtime 10.0.15."
-      echo "Sprawdź instalację w prefixie Wine."
+      echo "ERROR: .NET Desktop Runtime 10.0.15 was not found."
+      echo "Check the installation in the Wine prefix."
       exit 1
     fi
 
-    echo ".NET Desktop Runtime został zainstalowany poprawnie."
+    echo ".NET Desktop Runtime was installed successfully."
   '';
 
   pkhex = pkgs.writeShellScriptBin "pkhex" ''
@@ -85,8 +85,8 @@ let
     EXE="''${PKHEX_EXE:-$PWD/PKHeX.exe}"
 
     if [ ! -f "$EXE" ]; then
-      echo "Nie znaleziono PKHeX.exe: $EXE"
-      echo "Możesz ustawić zmienną PKHEX_EXE."
+      echo "PKHeX.exe was not found: $EXE"
+      echo "You can set the PKHEX_EXE environment variable."
       exit 1
     fi
 
@@ -104,16 +104,15 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    echo "Przygotowywanie środowiska PKHeX..."
+    echo "Preparing the PKHeX environment..."
 
     if ! pkhex-ensure-dotnet; then
-        echo "Nie udało się przygotować środowiska PKHeX."
+        echo "Failed to prepare the PKHeX environment."
         return 1
     fi
 
     echo ""
-    echo "Środowisko PKHeX gotowe."
-    echo "Uruchom program poleceniem: pkhex"
+    echo "PKHeX environment is ready."
+    echo "Launch the application using: pkhex"
   '';
 }
-

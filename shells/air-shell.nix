@@ -1,3 +1,4 @@
+
 { pkgs ? import <nixpkgs> {
     config.allowUnfree = true;
   }
@@ -28,7 +29,7 @@ pkgs.mkShell {
 
     mkdir -p "$HOME/Games" "$(dirname "$AIR")"
 
-    # Sprawdzenie obecności bibliotek runtime Adobe AIR
+    # Check whether the Adobe AIR runtime libraries are installed
     air_installed() {
       [ -f "$WINEPREFIX/drive_c/Program Files/Common Files/Adobe AIR/Versions/1.0/Adobe AIR.dll" ] ||
       [ -f "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Adobe AIR/Versions/1.0/Adobe AIR.dll" ]
@@ -39,74 +40,74 @@ pkgs.mkShell {
     echo " Prefix: $WINEPREFIX"
     echo "======================================"
 
-    # Przygotowanie zależności gry tylko raz
+    # Set up game dependencies only once
     if [ ! -f "$WINEPREFIX/.air-runtime-ready" ]; then
-      echo ">>> Instalowanie zależności Windows przez UMU..."
+      echo ">>> Installing Windows dependencies via UMU..."
 
       if ! umu-run winetricks -q settings win7; then
-        echo "Błąd konfiguracji prefixu."
+        echo "Failed to configure the Wine prefix."
         return 1
       fi
 
       if ! umu-run winetricks -q vcrun2010 gdiplus corefonts; then
-        echo "Błąd instalacji zależności."
+        echo "Failed to install dependencies."
         return 1
       fi
 
       touch "$WINEPREFIX/.air-runtime-ready"
     fi
 
-    # Pobranie instalatora Adobe AIR
+    # Download the Adobe AIR installer
     if [ ! -f "$AIR" ]; then
-      echo ">>> Pobieranie instalatora Adobe AIR..."
+      echo ">>> Downloading the Adobe AIR installer..."
 
       if ! curl -fL "$AIR_URL" -o "$AIR"; then
-        echo "Nie udało się pobrać Adobe AIR."
+        echo "Failed to download Adobe AIR."
         return 1
       fi
     fi
 
-    # Instalacja AIR tylko wtedy, gdy brakuje runtime
+    # Install AIR only if the runtime is missing
     if ! air_installed; then
-      echo ">>> Adobe AIR nie został wykryty."
-      echo ">>> Uruchamiam instalator przez umu-run..."
+      echo ">>> Adobe AIR runtime was not detected."
+      echo ">>> Launching the installer via umu-run..."
 
       umu-run "$AIR"
 
       if ! air_installed; then
         echo ""
-        echo "Nie potwierdzono instalacji Adobe AIR."
-        echo "Sprawdź, czy instalator zakończył się poprawnie."
+        echo "Adobe AIR installation could not be verified."
+        echo "Check whether the installer completed successfully."
         return 1
       fi
     else
-      echo ">>> Adobe AIR jest już zainstalowany."
+      echo ">>> Adobe AIR is already installed."
     fi
 
-    # Funkcja uruchamiająca grę
+    # Function for launching the game
     run-game() {
       if ! air_installed; then
-        echo "Brak Adobe AIR. Nie uruchamiam gry."
+        echo "Adobe AIR is missing. Cannot launch the game."
         return 1
       fi
 
       if [ "$#" -ne 1 ]; then
-        echo 'Użycie: run-game "/ścieżka/do/Game.exe"'
+        echo 'Usage: run-game "/path/to/Game.exe"'
         return 2
       fi
 
       if [ ! -f "$1" ]; then
-        echo "Nie znaleziono pliku: $1"
+        echo "File not found: $1"
         return 1
       fi
 
-      echo ">>> Uruchamiam grę przez UMU..."
+      echo ">>> Launching the game via UMU..."
       umu-run "$1"
     }
 
     echo ""
-    echo "Środowisko gotowe."
-    echo 'Uruchom grę: run-game "/ścieżka/do/Game.exe"'
+    echo "Environment is ready."
+    echo 'Launch the game: run-game "/path/to/Game.exe"'
     echo "======================================"
   '';
 }

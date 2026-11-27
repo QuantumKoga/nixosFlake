@@ -18,7 +18,7 @@ pkgs.mkShell {
 
     run-game() {
       if [ -z "''${1:-}" ]; then
-        echo "Użycie: run-game /ścieżka/do/gry.exe"
+        echo "Usage: run-game /path/to/game.exe"
         return 1
       fi
 
@@ -26,14 +26,14 @@ pkgs.mkShell {
       game="$(realpath "$1")" || return 1
 
       if [ ! -f "$game" ]; then
-        echo "Nie znaleziono pliku: $game"
+        echo "File not found: $game"
         return 1
       fi
 
       shift
       cd "$(dirname "$game")" || return 1
 
-      echo "Uruchamiam: $game"
+      echo "Running: $game"
       umu-run "$game" \
         -screen-width "$GAME_WIDTH" \
         -screen-height "$GAME_HEIGHT" \
@@ -44,7 +44,7 @@ pkgs.mkShell {
     echo "Środowisko gier U3D"
     echo "Prefix: $WINEPREFIX"
     echo "Proton: $PROTONPATH"
-    echo "Rozdzielczość: ''${GAME_WIDTH}x''${GAME_HEIGHT}"
-    echo "Uruchom: run-game /ścieżka/do/gry.exe"
+    echo "Resolution: ''${GAME_WIDTH}x''${GAME_HEIGHT}"
+    echo "Run: run-game /path/to/game.exe"
   '';
 }
