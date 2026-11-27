@@ -1,3 +1,4 @@
+# additional fonts for unique workspace signs instead of borring numbers :P
 { lib, fetchFromGitHub }:
 
 let

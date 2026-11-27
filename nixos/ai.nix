@@ -2,6 +2,7 @@
 { config, pkgs, pkgs-unstable, ... }:
 
 let
+  # Pokemon data API from another repo of mine
   pokemonAiPython = pkgs.python3.withPackages (ps: with ps; [
     # Scraper dependencies
     requests

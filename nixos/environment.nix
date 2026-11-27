@@ -1,3 +1,5 @@
+# everything necessary for my dotfiles to WorkingDirectory
+#Hyprland + Quickshell + additional basic daily usage tools
 { pkgs, pkgs-unstable, qylock, ... }:
 let
   games-font = pkgs.callPackage ./games_font.nix {};

@@ -11,7 +11,7 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
-    
+    # screen locker
     qylock = {
       url = "github:Darkkal44/qylock";
       flake = false;
